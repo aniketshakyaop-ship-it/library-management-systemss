@@ -1,0 +1,2541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Management System - ACET</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen custom-scrollbar">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // --- INITIAL DATA STORE ---
+    const INITIAL_BOOKS = [
+      {
+        id: 'B001',
+        title: 'Introduction to Algorithms',
+        author: 'Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest',
+        category: 'Computer Science',
+        isbn: '978-0262033848',
+        totalCopies: 8,
+        availableCopies: 6,
+        shelfLocation: 'Rack CS-101 (Floor 1)',
+        edition: '3rd Edition',
+        publisher: 'MIT Press',
+        publishYear: 2009,
+        description: 'A comprehensive textbook covering a broad range of algorithms in depth, making their design and analysis accessible to all levels of readers.',
+        rating: 4.8,
+        coverGradient: 'from-blue-600 to-indigo-800',
+        tags: ['Algorithms', 'Data Structures', 'Core CS']
+      },
+      {
+        id: 'B002',
+        title: 'Operating System Concepts',
+        author: 'Abraham Silberschatz, Peter B. Galvin, Greg Gagne',
+        category: 'Computer Science',
+        isbn: '978-1118063330',
+        totalCopies: 6,
+        availableCopies: 4,
+        shelfLocation: 'Rack CS-104 (Floor 1)',
+        edition: '9th Edition',
+        publisher: 'Wiley',
+        publishYear: 2018,
+        description: 'The world-renowned "Dinosaur book" providing a clear and up-to-date description of the concepts that underlie modern operating systems.',
+        rating: 4.7,
+        coverGradient: 'from-amber-600 to-orange-800',
+        tags: ['Operating Systems', 'Kernel', 'Processes']
+      },
+      {
+        id: 'B003',
+        title: 'Computer Networks',
+        author: 'Andrew S. Tanenbaum, David J. Wetherall',
+        category: 'Computer Science',
+        isbn: '978-0132126953',
+        totalCopies: 5,
+        availableCopies: 3,
+        shelfLocation: 'Rack CS-202 (Floor 1)',
+        edition: '5th Edition',
+        publisher: 'Pearson',
+        publishYear: 2011,
+        description: 'Classic networking textbook exploring network hardware and software from the physical layer up to the application layer.',
+        rating: 4.6,
+        coverGradient: 'from-emerald-600 to-teal-800',
+        tags: ['Networking', 'TCP/IP', 'Routing']
+      },
+      {
+        id: 'B004',
+        title: 'Database System Concepts',
+        author: 'Abraham Silberschatz, Henry F. Korth, S. Sudarshan',
+        category: 'Information Technology',
+        isbn: '978-0073523323',
+        totalCopies: 7,
+        availableCopies: 5,
+        shelfLocation: 'Rack IT-105 (Floor 1)',
+        edition: '6th Edition',
+        publisher: 'McGraw-Hill',
+        publishYear: 2019,
+        description: 'Fundamental concepts of database management, relational algebra, SQL, normal forms, transaction management, and concurrency control.',
+        rating: 4.6,
+        coverGradient: 'from-purple-600 to-indigo-900',
+        tags: ['DBMS', 'SQL', 'Relational Models']
+      },
+      {
+        id: 'B005',
+        title: "Software Engineering: A Practitioner's Approach",
+        author: 'Roger S. Pressman, Bruce R. Maxim',
+        category: 'Information Technology',
+        isbn: '978-0078022128',
+        totalCopies: 6,
+        availableCopies: 6,
+        shelfLocation: 'Rack IT-201 (Floor 1)',
+        edition: '8th Edition',
+        publisher: 'McGraw-Hill',
+        publishYear: 2014,
+        description: 'Comprehensive guide to software engineering methodologies, SDLC models, agile practices, quality assurance, and project management.',
+        rating: 4.5,
+        coverGradient: 'from-rose-600 to-pink-800',
+        tags: ['SDLC', 'Agile', 'Architecture']
+      },
+      {
+        id: 'B006',
+        title: 'Artificial Intelligence: A Modern Approach',
+        author: 'Stuart Russell, Peter Norvig',
+        category: 'Computer Science',
+        isbn: '978-0134610993',
+        totalCopies: 4,
+        availableCopies: 2,
+        shelfLocation: 'Rack AI-101 (Floor 2)',
+        edition: '4th Edition',
+        publisher: 'Pearson',
+        publishYear: 2020,
+        description: 'The standard university AI reference covering search algorithms, knowledge representation, probabilistic reasoning, machine learning, and neural nets.',
+        rating: 4.9,
+        coverGradient: 'from-cyan-600 to-blue-900',
+        tags: ['AI', 'Machine Learning', 'Agents']
+      },
+      {
+        id: 'B007',
+        title: 'Higher Engineering Mathematics',
+        author: 'Dr. B.S. Grewal',
+        category: 'Mathematics',
+        isbn: '978-8174091955',
+        totalCopies: 10,
+        availableCopies: 8,
+        shelfLocation: 'Rack MA-101 (Floor 2)',
+        edition: '44th Edition',
+        publisher: 'Khanna Publishers',
+        publishYear: 2017,
+        description: 'Essential reference for undergraduate engineering students covering calculus, linear algebra, differential equations, and transforms.',
+        rating: 4.7,
+        coverGradient: 'from-yellow-600 to-amber-900',
+        tags: ['Calculus', 'Linear Algebra', 'Maths']
+      },
+      {
+        id: 'B008',
+        title: 'Electronic Devices and Circuit Theory',
+        author: 'Robert L. Boylestad, Louis Nashelsky',
+        category: 'Electronics & Comm',
+        isbn: '978-0132622264',
+        totalCopies: 5,
+        availableCopies: 4,
+        shelfLocation: 'Rack EC-201 (Floor 2)',
+        edition: '11th Edition',
+        publisher: 'Pearson',
+        publishYear: 2013,
+        description: 'Standard textbook for semiconductor physics, diode circuits, BJT & FET amplifiers, and operational amplifiers.',
+        rating: 4.5,
+        coverGradient: 'from-red-600 to-rose-900',
+        tags: ['Circuits', 'Semiconductors', 'Electronics']
+      },
+      {
+        id: 'B009',
+        title: 'Clean Code: A Handbook of Agile Software Craftsmanship',
+        author: 'Robert C. Martin (Uncle Bob)',
+        category: 'Computer Science',
+        isbn: '978-0132350884',
+        totalCopies: 4,
+        availableCopies: 3,
+        shelfLocation: 'Rack SE-205 (Floor 1)',
+        edition: '1st Edition',
+        publisher: 'Prentice Hall',
+        publishYear: 2008,
+        description: 'Best-practice guide for writing readable, maintainable, and refactored code following clean code and SOLID principles.',
+        rating: 4.9,
+        coverGradient: 'from-green-600 to-emerald-900',
+        tags: ['Clean Code', 'Refactoring', 'Best Practices']
+      },
+      {
+        id: 'B010',
+        title: 'Theory of Machines and Mechanisms',
+        author: 'John J. Uicker, Gordon R. Pennock',
+        category: 'Mechanical Engg',
+        isbn: '978-0195371239',
+        totalCopies: 4,
+        availableCopies: 4,
+        shelfLocation: 'Rack ME-108 (Floor 2)',
+        edition: '4th Edition',
+        publisher: 'Oxford University Press',
+        publishYear: 2011,
+        description: 'Kinematics, dynamics of machinery, linkages, cams, gears, and balancing of mechanisms for mechanical engineering students.',
+        rating: 4.4,
+        coverGradient: 'from-stone-600 to-zinc-900',
+        tags: ['Mechanisms', 'Kinematics', 'Dynamics']
+      },
+      {
+        id: 'B011',
+        title: 'Design of Steel Structures',
+        author: 'N. Subramanian',
+        category: 'Civil Engg',
+        isbn: '978-0198068105',
+        totalCopies: 3,
+        availableCopies: 3,
+        shelfLocation: 'Rack CE-204 (Floor 2)',
+        edition: '2nd Edition',
+        publisher: 'Oxford University Press',
+        publishYear: 2016,
+        description: 'Covers limit state design of steel structural elements complying with standard IS 800:2007 Indian building codes.',
+        rating: 4.3,
+        coverGradient: 'from-orange-600 to-amber-950',
+        tags: ['Structures', 'Steel Design', 'Civil']
+      },
+      {
+        id: 'B012',
+        title: 'Principles of Management and Organization',
+        author: 'Stephen P. Robbins, Mary Coulter',
+        category: 'Management & General',
+        isbn: '978-0134527604',
+        totalCopies: 5,
+        availableCopies: 4,
+        shelfLocation: 'Rack MG-302 (Floor 3)',
+        edition: '14th Edition',
+        publisher: 'Pearson',
+        publishYear: 2018,
+        description: 'Fundamental management theories, organizational behavior, decision-making, leadership, and team dynamics.',
+        rating: 4.5,
+        coverGradient: 'from-violet-600 to-purple-950',
+        tags: ['Management', 'Leadership', 'Behavior']
+      }
+    ];
+
+    const INITIAL_MEMBERS = [
+      {
+        id: 'M001',
+        name: 'Gazal Gupta',
+        rollNo: '2401090100037',
+        email: 'gazal.gupta@acet.ac.in',
+        department: 'Computer Science & Engineering',
+        year: '2nd Year',
+        phone: '+91 98765 43210',
+        role: 'Student',
+        maxBooksAllowed: 3,
+        status: 'Active',
+        joinedDate: '2024-08-10',
+        avatar: 'GG'
+      },
+      {
+        id: 'M002',
+        name: 'Rahul Sharma',
+        rollNo: '2401090100045',
+        email: 'rahul.sharma@acet.ac.in',
+        department: 'Computer Science & Engineering',
+        year: '2nd Year',
+        phone: '+91 98112 34567',
+        role: 'Student',
+        maxBooksAllowed: 3,
+        status: 'Active',
+        joinedDate: '2024-08-12',
+        avatar: 'RS'
+      },
+      {
+        id: 'M003',
+        name: 'Priya Singh',
+        rollNo: '2401090100012',
+        email: 'priya.singh@acet.ac.in',
+        department: 'Information Technology',
+        year: '3rd Year',
+        phone: '+91 98223 45678',
+        role: 'Student',
+        maxBooksAllowed: 3,
+        status: 'Active',
+        joinedDate: '2023-08-16',
+        avatar: 'PS'
+      },
+      {
+        id: 'M004',
+        name: 'Aman Verma',
+        rollNo: '2401090100089',
+        email: 'aman.verma@acet.ac.in',
+        department: 'Electronics & Comm. Engg',
+        year: '1st Year',
+        phone: '+91 98334 56789',
+        role: 'Student',
+        maxBooksAllowed: 3,
+        status: 'Active',
+        joinedDate: '2025-08-20',
+        avatar: 'AV'
+      },
+      {
+        id: 'M005',
+        name: 'Dr. Anand',
+        rollNo: 'FAC-CSE-001',
+        email: 'anand.hod@acet.ac.in',
+        department: 'Computer Science & Engineering',
+        year: 'Faculty / HOD',
+        phone: '+91 98445 67890',
+        role: 'HOD / Faculty',
+        maxBooksAllowed: 10,
+        status: 'Active',
+        joinedDate: '2015-07-01',
+        avatar: 'DA'
+      }
+    ];
+
+    const getRelativeDate = (offsetDays) => {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      return d.toISOString().split('T')[0];
+    };
+
+    const INITIAL_BORROWS = [
+      {
+        id: 'TXN-1001',
+        bookId: 'B001',
+        bookTitle: 'Introduction to Algorithms',
+        memberId: 'M001',
+        memberName: 'Gazal Gupta',
+        memberRoll: '2401090100037',
+        issueDate: getRelativeDate(-5),
+        dueDate: getRelativeDate(9),
+        returnDate: null,
+        status: 'Active',
+        finePaid: 0,
+        renewCount: 0
+      },
+      {
+        id: 'TXN-1002',
+        bookId: 'B002',
+        bookTitle: 'Operating System Concepts',
+        memberId: 'M001',
+        memberName: 'Gazal Gupta',
+        memberRoll: '2401090100037',
+        issueDate: getRelativeDate(-17),
+        dueDate: getRelativeDate(-3), // 3 days overdue
+        returnDate: null,
+        status: 'Overdue',
+        finePaid: 0,
+        renewCount: 0
+      },
+      {
+        id: 'TXN-1003',
+        bookId: 'B003',
+        bookTitle: 'Computer Networks',
+        memberId: 'M002',
+        memberName: 'Rahul Sharma',
+        memberRoll: '2401090100045',
+        issueDate: getRelativeDate(-12),
+        dueDate: getRelativeDate(2), // Due in 2 days
+        returnDate: null,
+        status: 'Due Soon',
+        finePaid: 0,
+        renewCount: 0
+      },
+      {
+        id: 'TXN-1004',
+        bookId: 'B006',
+        bookTitle: 'Artificial Intelligence: A Modern Approach',
+        memberId: 'M004',
+        memberName: 'Aman Verma',
+        memberRoll: '2401090100089',
+        issueDate: getRelativeDate(-8),
+        dueDate: getRelativeDate(6),
+        returnDate: null,
+        status: 'Active',
+        finePaid: 0,
+        renewCount: 0
+      },
+      {
+        id: 'TXN-1005',
+        bookId: 'B004',
+        bookTitle: 'Database System Concepts',
+        memberId: 'M003',
+        memberName: 'Priya Singh',
+        memberRoll: '2401090100012',
+        issueDate: getRelativeDate(-22),
+        dueDate: getRelativeDate(-8),
+        returnDate: getRelativeDate(-7),
+        status: 'Returned',
+        finePaid: 5,
+        renewCount: 0
+      },
+      {
+        id: 'TXN-1006',
+        bookId: 'B012',
+        bookTitle: 'Principles of Management and Organization',
+        memberId: 'M001',
+        memberName: 'Gazal Gupta',
+        memberRoll: '2401090100037',
+        issueDate: getRelativeDate(-35),
+        dueDate: getRelativeDate(-21),
+        returnDate: getRelativeDate(-20),
+        status: 'Returned',
+        finePaid: 0,
+        renewCount: 1
+      }
+    ];
+
+    const CATEGORIES = [
+      'All Categories',
+      'Computer Science',
+      'Information Technology',
+      'Electronics & Comm',
+      'Mechanical Engg',
+      'Civil Engg',
+      'Mathematics',
+      'Management & General'
+    ];
+
+    // Helper: calculate fine given due date
+    const calculateFine = (dueDateStr, returnDateStr = null) => {
+      const due = new Date(dueDateStr);
+      const referenceDate = returnDateStr ? new Date(returnDateStr) : new Date();
+      // Reset hours to midnight
+      due.setHours(0, 0, 0, 0);
+      referenceDate.setHours(0, 0, 0, 0);
+      const diffTime = referenceDate - due;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 0) {
+        return { overdueDays: diffDays, fine: diffDays * 5 }; // ₹5 per day
+      }
+      return { overdueDays: 0, fine: 0 };
+    };
+
+    // Helper: calculate status given due date
+    const getBorrowStatus = (borrow) => {
+      if (borrow.returnDate) return 'Returned';
+      const due = new Date(borrow.dueDate);
+      const today = new Date();
+      due.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) return 'Overdue';
+      if (diffDays <= 3) return 'Due Soon';
+      return 'Active';
+    };
+
+    // --- MAIN COMPONENT ---
+    function App() {
+      // LocalStorage backed states
+      const [books, setBooks] = useState(() => {
+        const saved = localStorage.getItem('acet_lms_books');
+        return saved ? JSON.parse(saved) : INITIAL_BOOKS;
+      });
+
+      const [members, setMembers] = useState(() => {
+        const saved = localStorage.getItem('acet_lms_members');
+        return saved ? JSON.parse(saved) : INITIAL_MEMBERS;
+      });
+
+      const [borrows, setBorrows] = useState(() => {
+        const saved = localStorage.getItem('acet_lms_borrows');
+        return saved ? JSON.parse(saved) : INITIAL_BORROWS;
+      });
+
+      // User role / persona: 'member' (Gazal Gupta) or 'admin' (Dr. Anand / Librarian)
+      const [persona, setPersona] = useState('member');
+      const currentMemberId = 'M001'; // Gazal Gupta
+
+      // Navigation tab
+      const [activeTab, setActiveTab] = useState('catalog'); // 'catalog', 'mybooks', 'transactions', 'members', 'analytics'
+
+      // Search & Filters
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedCategory, setSelectedCategory] = useState('All Categories');
+      const [availabilityFilter, setAvailabilityFilter] = useState('all'); // 'all', 'available', 'borrowed'
+      const [sortBy, setSortBy] = useState('title');
+
+      // Modals
+      const [selectedBookModal, setSelectedBookModal] = useState(null);
+      const [showAddEditBookModal, setShowAddEditBookModal] = useState(false);
+      const [editingBook, setEditingBook] = useState(null);
+      const [showIssueModal, setShowIssueModal] = useState(false);
+      const [preselectedBookForIssue, setPreselectedBookForIssue] = useState(null);
+      const [returnReceiptModal, setReturnReceiptModal] = useState(null);
+      const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+      const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
+
+      // Toast Notifications
+      const [toasts, setToasts] = useState([]);
+
+      const showToast = (message, type = 'success') => {
+        const id = Date.now();
+        setToasts(prev => [...prev, { id, message, type }]);
+        setTimeout(() => {
+          setToasts(prev => prev.filter(t => t.id !== id));
+        }, 4000);
+      };
+
+      // Sync state to LocalStorage
+      useEffect(() => {
+        localStorage.setItem('acet_lms_books', JSON.stringify(books));
+      }, [books]);
+
+      useEffect(() => {
+        localStorage.setItem('acet_lms_members', JSON.stringify(members));
+      }, [members]);
+
+      useEffect(() => {
+        localStorage.setItem('acet_lms_borrows', JSON.stringify(borrows));
+      }, [borrows]);
+
+      // Computed dynamic borrows with live status & fines
+      const liveBorrows = useMemo(() => {
+        return borrows.map(b => {
+          const status = getBorrowStatus(b);
+          const fineInfo = calculateFine(b.dueDate, b.returnDate);
+          return {
+            ...b,
+            status,
+            currentFine: b.returnDate ? b.finePaid : fineInfo.fine,
+            overdueDays: fineInfo.overdueDays
+          };
+        });
+      }, [borrows]);
+
+      // Notifications (books due soon or overdue)
+      const pendingNotifications = useMemo(() => {
+        if (persona === 'member') {
+          return liveBorrows.filter(b => b.memberId === currentMemberId && !b.returnDate && (b.status === 'Overdue' || b.status === 'Due Soon'));
+        } else {
+          return liveBorrows.filter(b => !b.returnDate && (b.status === 'Overdue' || b.status === 'Due Soon'));
+        }
+      }, [liveBorrows, persona]);
+
+      // Filtered Books
+      const filteredBooks = useMemo(() => {
+        return books.filter(b => {
+          const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            b.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            b.isbn.includes(searchQuery) ||
+            b.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+
+          const matchesCategory = selectedCategory === 'All Categories' || b.category === selectedCategory;
+
+          const matchesAvailability = availabilityFilter === 'all'
+            ? true
+            : availabilityFilter === 'available'
+              ? b.availableCopies > 0
+              : b.availableCopies === 0;
+
+          return matchesSearch && matchesCategory && matchesAvailability;
+        }).sort((a, b) => {
+          if (sortBy === 'title') return a.title.localeCompare(b.title);
+          if (sortBy === 'rating') return b.rating - a.rating;
+          if (sortBy === 'copies') return b.availableCopies - a.availableCopies;
+          if (sortBy === 'year') return b.publishYear - a.publishYear;
+          return 0;
+        });
+      }, [books, searchQuery, selectedCategory, availabilityFilter, sortBy]);
+
+      // Statistics calculations
+      const stats = useMemo(() => {
+        const totalTitles = books.length;
+        const totalCopies = books.reduce((acc, b) => acc + Number(b.totalCopies), 0);
+        const availableCopies = books.reduce((acc, b) => acc + Number(b.availableCopies), 0);
+        const activeBorrows = liveBorrows.filter(b => !b.returnDate).length;
+        const overdueBorrows = liveBorrows.filter(b => b.status === 'Overdue' && !b.returnDate).length;
+        const totalFinesCollected = liveBorrows.reduce((acc, b) => acc + (b.finePaid || 0), 0);
+        const pendingFines = liveBorrows.filter(b => !b.returnDate).reduce((acc, b) => acc + (b.currentFine || 0), 0);
+        const totalMembers = members.length;
+
+        // Categories breakdown
+        const categoryCounts = {};
+        books.forEach(b => {
+          categoryCounts[b.category] = (categoryCounts[b.category] || 0) + b.totalCopies;
+        });
+
+        // Top borrowed books
+        const borrowCounts = {};
+        borrows.forEach(b => {
+          borrowCounts[b.bookId] = (borrowCounts[b.bookId] || 0) + 1;
+        });
+
+        return {
+          totalTitles,
+          totalCopies,
+          availableCopies,
+          activeBorrows,
+          overdueBorrows,
+          totalFinesCollected,
+          pendingFines,
+          totalMembers,
+          categoryCounts,
+          borrowCounts
+        };
+      }, [books, liveBorrows, members, borrows]);
+
+      // --- ACTIONS ---
+
+      // Issue Book
+      const handleIssueBook = ({ bookId, memberId, loanDays = 14 }) => {
+        const targetBook = books.find(b => b.id === bookId);
+        const targetMember = members.find(m => m.id === memberId);
+
+        if (!targetBook || targetBook.availableCopies <= 0) {
+          showToast('Selected book has no available copies in stock!', 'error');
+          return;
+        }
+
+        // Check active borrow count of member
+        const currentActiveCount = liveBorrows.filter(b => b.memberId === memberId && !b.returnDate).length;
+        if (currentActiveCount >= targetMember.maxBooksAllowed) {
+          showToast(`Limit reached: ${targetMember.name} has already borrowed max ${targetMember.maxBooksAllowed} books.`, 'error');
+          return;
+        }
+
+        const issueDate = new Date().toISOString().split('T')[0];
+        const due = new Date();
+        due.setDate(due.getDate() + Number(loanDays));
+        const dueDate = due.toISOString().split('T')[0];
+
+        const newBorrow = {
+          id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
+          bookId: targetBook.id,
+          bookTitle: targetBook.title,
+          memberId: targetMember.id,
+          memberName: targetMember.name,
+          memberRoll: targetMember.rollNo,
+          issueDate,
+          dueDate,
+          returnDate: null,
+          status: 'Active',
+          finePaid: 0,
+          renewCount: 0
+        };
+
+        // Update book copies
+        setBooks(prev => prev.map(b => b.id === bookId ? { ...b, availableCopies: b.availableCopies - 1 } : b));
+        setBorrows(prev => [newBorrow, ...prev]);
+        setShowIssueModal(false);
+        setPreselectedBookForIssue(null);
+        showToast(`Successfully issued "${targetBook.title}" to ${targetMember.name}!`, 'success');
+      };
+
+      // Return Book
+      const handleReturnBook = (borrowId) => {
+        const borrow = liveBorrows.find(b => b.id === borrowId);
+        if (!borrow || borrow.returnDate) return;
+
+        const returnDate = new Date().toISOString().split('T')[0];
+        const fineInfo = calculateFine(borrow.dueDate, returnDate);
+
+        // Update borrow transaction
+        setBorrows(prev => prev.map(b => {
+          if (b.id === borrowId) {
+            return {
+              ...b,
+              returnDate,
+              status: 'Returned',
+              finePaid: fineInfo.fine
+            };
+          }
+          return b;
+        }));
+
+        // Restore book copy
+        setBooks(prev => prev.map(b => {
+          if (b.id === borrow.bookId) {
+            return { ...b, availableCopies: Math.min(b.totalCopies, b.availableCopies + 1) };
+          }
+          return b;
+        }));
+
+        const receiptData = {
+          ...borrow,
+          returnDate,
+          finePaid: fineInfo.fine,
+          overdueDays: fineInfo.overdueDays
+        };
+
+        setReturnReceiptModal(receiptData);
+        showToast(`Book "${borrow.bookTitle}" returned successfully!`, 'success');
+      };
+
+      // Renew Book (Extend due date by 7 days)
+      const handleRenewBook = (borrowId) => {
+        setBorrows(prev => prev.map(b => {
+          if (b.id === borrowId) {
+            const currentDue = new Date(b.dueDate);
+            currentDue.setDate(currentDue.getDate() + 7);
+            return {
+              ...b,
+              dueDate: currentDue.toISOString().split('T')[0],
+              renewCount: (b.renewCount || 0) + 1
+            };
+          }
+          return b;
+        }));
+        showToast('Due date extended by 7 days!', 'success');
+      };
+
+      // Add or Edit Book
+      const handleSaveBook = (bookData) => {
+        if (editingBook) {
+          // Edit
+          setBooks(prev => prev.map(b => b.id === editingBook.id ? { ...bookData, id: b.id } : b));
+          showToast(`Updated "${bookData.title}" details.`, 'success');
+        } else {
+          // Add new
+          const newId = `B${String(books.length + 1).padStart(3, '0')}`;
+          const newBook = {
+            ...bookData,
+            id: newId,
+            availableCopies: Number(bookData.totalCopies),
+            rating: 4.8,
+            coverGradient: 'from-indigo-600 to-purple-800',
+            tags: bookData.tags || [bookData.category, 'Textbook']
+          };
+          setBooks(prev => [newBook, ...prev]);
+          showToast(`New book "${newBook.title}" added to library catalog!`, 'success');
+        }
+        setShowAddEditBookModal(false);
+        setEditingBook(null);
+      };
+
+      // Delete Book
+      const handleDeleteBook = (bookId) => {
+        const book = books.find(b => b.id === bookId);
+        const hasActiveLoans = liveBorrows.some(b => b.bookId === bookId && !b.returnDate);
+        if (hasActiveLoans) {
+          showToast('Cannot delete book while copies are currently issued to members!', 'error');
+          return;
+        }
+        if (confirm(`Are you sure you want to remove "${book.title}" from the catalog?`)) {
+          setBooks(prev => prev.filter(b => b.id !== bookId));
+          showToast(`"${book.title}" was removed.`, 'success');
+          if (selectedBookModal?.id === bookId) setSelectedBookModal(null);
+        }
+      };
+
+      // Add New Member
+      const handleAddMember = (memberData) => {
+        const newId = `M${String(members.length + 1).padStart(3, '0')}`;
+        const initials = memberData.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        const newMember = {
+          ...memberData,
+          id: newId,
+          joinedDate: new Date().toISOString().split('T')[0],
+          status: 'Active',
+          avatar: initials || 'ST'
+        };
+        setMembers(prev => [...prev, newMember]);
+        setShowAddMemberModal(false);
+        showToast(`Member ${newMember.name} registered successfully!`, 'success');
+      };
+
+      // Reset to Default Sample Data
+      const handleResetData = () => {
+        if (confirm('Reset library system to initial sample books and transaction records?')) {
+          localStorage.removeItem('acet_lms_books');
+          localStorage.removeItem('acet_lms_members');
+          localStorage.removeItem('acet_lms_borrows');
+          setBooks(INITIAL_BOOKS);
+          setMembers(INITIAL_MEMBERS);
+          setBorrows(INITIAL_BORROWS);
+          showToast('Reset data to initial state.', 'info');
+        }
+      };
+
+      // Export Catalog as CSV
+      const handleExportCSV = () => {
+        const headers = ['Book ID', 'Title', 'Author', 'Category', 'ISBN', 'Total Copies', 'Available Copies', 'Shelf Location', 'Publisher', 'Year'];
+        const rows = books.map(b => [
+          b.id,
+          `"${b.title.replace(/"/g, '""')}"`,
+          `"${b.author.replace(/"/g, '""')}"`,
+          `"${b.category}"`,
+          b.isbn,
+          b.totalCopies,
+          b.availableCopies,
+          `"${b.shelfLocation}"`,
+          `"${b.publisher}"`,
+          b.publishYear
+        ]);
+        const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `ACET_Library_Catalog_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('Exported Book Catalog CSV!', 'success');
+      };
+
+      return (
+        <div className="flex flex-col min-h-screen">
+          {/* TOAST ALERTS */}
+          <div className="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none">
+            {toasts.map(t => (
+              <div
+                key={t.id}
+                className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl text-sm font-medium transition-all transform animate-bounce-once ${
+                  t.type === 'success' ? 'bg-emerald-600 text-white shadow-emerald-500/20' :
+                  t.type === 'error' ? 'bg-rose-600 text-white shadow-rose-500/20' :
+                  'bg-indigo-600 text-white shadow-indigo-500/20'
+                }`}
+              >
+                <span>{t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : 'ℹ'}</span>
+                <span>{t.message}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* TOP NOTIFICATION / COLLEGE BANNER */}
+          <div className="bg-slate-900 text-slate-300 text-xs px-4 py-1.5 flex flex-wrap justify-between items-center border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="font-semibold text-slate-100">Aligarh College of Engineering and Technology</span>
+              <span className="hidden sm:inline text-slate-400">• Mini Project: Library Management System</span>
+            </div>
+            <div className="flex items-center gap-4 text-slate-400">
+              <span>Submitted By: <strong className="text-indigo-400 font-medium">Gazal Gupta (2401090100037)</strong></span>
+              <span className="hidden md:inline">Guided By: <strong className="text-amber-400 font-medium">Dr. Anand sir (HOD)</strong></span>
+            </div>
+          </div>
+
+          {/* MAIN HEADER & NAVIGATION */}
+          <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                
+                {/* Logo & College Identity */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-700 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-none">ACET Central Library</h1>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">Automated Digital Resource Center</p>
+                  </div>
+                </div>
+
+                {/* Navigation Links */}
+                <nav className="hidden md:flex items-center gap-1">
+                  <button
+                    onClick={() => setActiveTab('catalog')}
+                    className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      activeTab === 'catalog'
+                        ? 'bg-brand-50 text-brand-700 font-bold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    📚 Book Catalog
+                  </button>
+
+                  {persona === 'member' && (
+                    <button
+                      onClick={() => setActiveTab('mybooks')}
+                      className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                        activeTab === 'mybooks'
+                          ? 'bg-brand-50 text-brand-700 font-bold'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>🎒 My Borrowed Books</span>
+                      {liveBorrows.filter(b => b.memberId === currentMemberId && !b.returnDate).length > 0 && (
+                        <span className="px-1.5 py-0.2 bg-brand-600 text-white text-xs rounded-full">
+                          {liveBorrows.filter(b => b.memberId === currentMemberId && !b.returnDate).length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+
+                  {persona === 'admin' && (
+                    <>
+                      <button
+                        onClick={() => setActiveTab('transactions')}
+                        className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                          activeTab === 'transactions'
+                            ? 'bg-brand-50 text-brand-700 font-bold'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>🔄 Issue & Return</span>
+                        {stats.overdueBorrows > 0 && (
+                          <span className="px-1.5 py-0.2 bg-rose-500 text-white text-xs rounded-full">
+                            {stats.overdueBorrows} overdue
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('members')}
+                        className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          activeTab === 'members'
+                            ? 'bg-brand-50 text-brand-700 font-bold'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
+                      >
+                        👥 Members
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('analytics')}
+                        className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          activeTab === 'analytics'
+                            ? 'bg-brand-50 text-brand-700 font-bold'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
+                      >
+                        📊 Reports & Analytics
+                      </button>
+                    </>
+                  )}
+                </nav>
+
+                {/* Right Actions: Persona Switcher, Notifications, Quick Actions */}
+                <div className="flex items-center gap-3">
+                  
+                  {/* Notifications Bell */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowNotificationsDropdown(!showNotificationsDropdown)}
+                      className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 relative transition-colors"
+                      title="Due date alerts"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                      {pendingNotifications.length > 0 && (
+                        <span className="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                          {pendingNotifications.length}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Notification Dropdown Drawer */}
+                    {showNotificationsDropdown && (
+                      <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 p-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-3">
+                          <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                            <span>🔔 Return Notifications</span>
+                            <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs rounded-full font-semibold">
+                              {pendingNotifications.length}
+                            </span>
+                          </h3>
+                          <button
+                            onClick={() => setShowNotificationsDropdown(false)}
+                            className="text-xs text-slate-400 hover:text-slate-600"
+                          >
+                            Close
+                          </button>
+                        </div>
+
+                        {pendingNotifications.length === 0 ? (
+                          <div className="text-center py-6 text-slate-500 text-sm">
+                            <span className="text-2xl block mb-1">🎉</span>
+                            No overdue or pending return alerts!
+                          </div>
+                        ) : (
+                          <div className="space-y-2.5 max-h-72 overflow-y-auto custom-scrollbar pr-1">
+                            {pendingNotifications.map(item => (
+                              <div
+                                key={item.id}
+                                className={`p-3 rounded-xl border text-xs ${
+                                  item.status === 'Overdue'
+                                    ? 'bg-rose-50/80 border-rose-200 text-rose-900'
+                                    : 'bg-amber-50/80 border-amber-200 text-amber-900'
+                                }`}
+                              >
+                                <div className="flex justify-between font-bold mb-1">
+                                  <span className="truncate pr-2">{item.bookTitle}</span>
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${
+                                    item.status === 'Overdue' ? 'bg-rose-200 text-rose-800' : 'bg-amber-200 text-amber-800'
+                                  }`}>
+                                    {item.status}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] opacity-80 flex justify-between">
+                                  <span>Borrower: {item.memberName}</span>
+                                  <span>Due: {item.dueDate}</span>
+                                </div>
+                                {item.currentFine > 0 && (
+                                  <div className="mt-1.5 font-bold text-rose-700">
+                                    Overdue by {item.overdueDays} days • Fine: ₹{item.currentFine}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Role / Persona Switcher Toggle */}
+                  <div className="bg-slate-100 p-1 rounded-xl flex items-center border border-slate-200/80">
+                    <button
+                      onClick={() => {
+                        setPersona('member');
+                        setActiveTab('catalog');
+                        showToast('Switched to Member View (Gazal Gupta)', 'info');
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                        persona === 'member'
+                          ? 'bg-white text-brand-700 shadow-sm'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-brand-500"></span>
+                      <span>Student</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setPersona('admin');
+                        setActiveTab('catalog');
+                        showToast('Switched to Admin View (Dr. Anand / Librarian)', 'info');
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                        persona === 'admin'
+                          ? 'bg-slate-900 text-white shadow-sm'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                      <span>Admin</span>
+                    </button>
+                  </div>
+
+                  {/* Admin Fast-Action Buttons */}
+                  {persona === 'admin' && (
+                    <button
+                      onClick={() => {
+                        setEditingBook(null);
+                        setShowAddEditBookModal(true);
+                      }}
+                      className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-md shadow-brand-500/20 transition-all"
+                    >
+                      <span>+ Add Book</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile Navigation bar */}
+              <div className="md:hidden flex overflow-x-auto gap-2 py-2 border-t border-slate-100 no-scrollbar">
+                <button
+                  onClick={() => setActiveTab('catalog')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                    activeTab === 'catalog' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  📚 Catalog
+                </button>
+                {persona === 'member' && (
+                  <button
+                    onClick={() => setActiveTab('mybooks')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                      activeTab === 'mybooks' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    🎒 My Books
+                  </button>
+                )}
+                {persona === 'admin' && (
+                  <>
+                    <button
+                      onClick={() => setActiveTab('transactions')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                        activeTab === 'transactions' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      🔄 Issues & Returns
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('members')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                        activeTab === 'members' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      👥 Members
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('analytics')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                        activeTab === 'analytics' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      📊 Analytics
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </header>
+
+          {/* ACTIVE ROLE SUB-HEADER BANNER */}
+          <div className="bg-slate-100/70 border-b border-slate-200/60 py-2.5 px-4 sm:px-8">
+            <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-bold flex items-center justify-center text-xs">
+                  {persona === 'member' ? 'GG' : 'DA'}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-800 flex items-center gap-2">
+                    <span>{persona === 'member' ? 'Gazal Gupta (Student Member)' : 'Dr. Anand sir (Head of Department & Chief Librarian)'}</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-200 text-slate-700 font-mono">
+                      {persona === 'member' ? 'Roll: 2401090100037' : 'Staff ID: FAC-CSE-001'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    {persona === 'member'
+                      ? 'Dept: Computer Science & Engg • 2nd Year • Borrow Quota: 3 Books'
+                      : 'ACET Central Library Administration • Master Privileges Enabled'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex items-center gap-2">
+                {persona === 'admin' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setPreselectedBookForIssue(null);
+                        setShowIssueModal(true);
+                      }}
+                      className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition"
+                    >
+                      ⚡ Quick Issue Book
+                    </button>
+                    <button
+                      onClick={handleExportCSV}
+                      className="px-3 py-1 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-medium transition"
+                    >
+                      📥 Export CSV
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={handleResetData}
+                  className="px-2.5 py-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 text-xs transition"
+                  title="Reset sample data"
+                >
+                  ↺ Reset Data
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* MAIN BODY CONTENT */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+            {/* TAB 1: BOOK CATALOG */}
+            {activeTab === 'catalog' && (
+              <div className="space-y-6">
+                
+                {/* Hero / Overview Banner */}
+                <div className="relative rounded-3xl bg-gradient-to-r from-slate-900 via-brand-900 to-indigo-950 text-white p-6 sm:p-8 overflow-hidden shadow-xl">
+                  <div className="relative z-10 max-w-2xl">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-brand-200 text-xs font-medium mb-3">
+                      <span>🏛️ Automated Library Management</span>
+                      <span>•</span>
+                      <span>Real-time Catalog</span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                      Explore Academic Resources & Engineering Texts
+                    </h2>
+                    <p className="mt-2 text-slate-300 text-sm leading-relaxed">
+                      Search across {books.length} curated engineering titles, check live shelf availability, reserve copies, and track return dates seamlessly.
+                    </p>
+
+                    {/* Stats Pill Strip */}
+                    <div className="mt-6 flex flex-wrap gap-4 text-xs font-medium">
+                      <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2">
+                        <span className="text-emerald-400 font-bold">{stats.availableCopies}</span>
+                        <span className="text-slate-300">Available Copies</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2">
+                        <span className="text-amber-400 font-bold">{stats.activeBorrows}</span>
+                        <span className="text-slate-300">Books Issued</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2">
+                        <span className="text-indigo-300 font-bold">{CATEGORIES.length - 1}</span>
+                        <span className="text-slate-300">Departments</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Decorative background circle */}
+                  <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                </div>
+
+                {/* Search & Filter Controls */}
+                <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                    
+                    {/* Search Input */}
+                    <div className="md:col-span-5 relative">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search by book title, author, ISBN, or topic..."
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition"
+                      />
+                      <svg className="w-5 h-5 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600 bg-slate-200 rounded-full w-5 h-5 flex items-center justify-center"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Category Filter */}
+                    <div className="md:col-span-3">
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
+                      >
+                        {CATEGORIES.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Availability Filter */}
+                    <div className="md:col-span-2">
+                      <select
+                        value={availabilityFilter}
+                        onChange={(e) => setAvailabilityFilter(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
+                      >
+                        <option value="all">All Stock Status</option>
+                        <option value="available">In Stock Only</option>
+                        <option value="borrowed">Out of Stock</option>
+                      </select>
+                    </div>
+
+                    {/* Sort By */}
+                    <div className="md:col-span-2">
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
+                      >
+                        <option value="title">Sort: Title (A-Z)</option>
+                        <option value="rating">Sort: Top Rated</option>
+                        <option value="copies">Sort: Most Copies</option>
+                        <option value="year">Sort: Publication Year</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Category Pills Strip */}
+                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+                    {CATEGORIES.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-3 py-1.5 rounded-full font-medium whitespace-nowrap transition ${
+                          selectedCategory === cat
+                            ? 'bg-slate-900 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Books Grid */}
+                <div className="flex justify-between items-center text-xs text-slate-500 px-1">
+                  <span>Showing <strong>{filteredBooks.length}</strong> of {books.length} library titles</span>
+                  {persona === 'admin' && (
+                    <button
+                      onClick={() => {
+                        setEditingBook(null);
+                        setShowAddEditBookModal(true);
+                      }}
+                      className="text-brand-600 hover:text-brand-800 font-semibold"
+                    >
+                      + Add New Book Record
+                    </button>
+                  )}
+                </div>
+
+                {filteredBooks.length === 0 ? (
+                  <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 max-w-md mx-auto">
+                    <span className="text-4xl block mb-3">🔍</span>
+                    <h3 className="font-bold text-slate-800 text-lg">No books found</h3>
+                    <p className="text-slate-500 text-sm mt-1">Try clearing your search query or choosing another category filter.</p>
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedCategory('All Categories');
+                        setAvailabilityFilter('all');
+                      }}
+                      className="mt-4 px-4 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl"
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {filteredBooks.map(book => {
+                      const isOutOfStock = book.availableCopies <= 0;
+                      return (
+                        <div
+                          key={book.id}
+                          className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group"
+                        >
+                          {/* Book Gradient Cover / Header */}
+                          <div className={`h-36 bg-gradient-to-tr ${book.coverGradient || 'from-blue-600 to-indigo-800'} p-4 relative flex flex-col justify-between text-white`}>
+                            <div className="flex justify-between items-start">
+                              <span className="px-2 py-0.5 rounded-md bg-black/30 backdrop-blur-md text-[10px] font-mono tracking-wider font-semibold">
+                                {book.id}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1 ${
+                                isOutOfStock ? 'bg-rose-500/90 text-white' : 'bg-emerald-500/90 text-white'
+                              }`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                                {isOutOfStock ? 'Issued Out' : `${book.availableCopies} Available`}
+                              </span>
+                            </div>
+
+                            <div>
+                              <div className="text-[11px] font-semibold text-white/80 tracking-wide uppercase">
+                                {book.category}
+                              </div>
+                              <h3 className="font-bold text-base leading-tight line-clamp-2 mt-0.5 drop-shadow-sm group-hover:underline">
+                                {book.title}
+                              </h3>
+                            </div>
+                          </div>
+
+                          {/* Book Card Details */}
+                          <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                            <div>
+                              <p className="text-xs font-medium text-slate-600 line-clamp-1">
+                                ✍️ {book.author}
+                              </p>
+                              <div className="flex items-center gap-2 mt-2 text-[11px] text-slate-500">
+                                <span>📍 {book.shelfLocation}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 font-mono">
+                                <span>ISBN: {book.isbn}</span>
+                              </div>
+                            </div>
+
+                            {/* Tags */}
+                            <div className="flex flex-wrap gap-1.5">
+                              {book.tags?.slice(0, 2).map(tag => (
+                                <span key={tag} className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium">
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Card Footer Actions */}
+                            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                              <button
+                                onClick={() => setSelectedBookModal(book)}
+                                className="flex-1 py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition"
+                              >
+                                View Details
+                              </button>
+
+                              {persona === 'member' ? (
+                                <button
+                                  onClick={() => handleIssueBook({ bookId: book.id, memberId: currentMemberId })}
+                                  disabled={isOutOfStock}
+                                  className={`py-1.5 px-3 rounded-xl text-xs font-semibold transition shadow-sm ${
+                                    isOutOfStock
+                                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                      : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-500/20'
+                                  }`}
+                                >
+                                  Borrow
+                                </button>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => {
+                                      setPreselectedBookForIssue(book);
+                                      setShowIssueModal(true);
+                                    }}
+                                    disabled={isOutOfStock}
+                                    className={`p-1.5 rounded-lg text-xs font-medium ${
+                                      isOutOfStock ? 'text-slate-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                    }`}
+                                    title="Issue to Member"
+                                  >
+                                    ⚡ Issue
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingBook(book);
+                                      setShowAddEditBookModal(true);
+                                    }}
+                                    className="p-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-200"
+                                    title="Edit Book Record"
+                                  >
+                                    ✏️
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 2: MY BORROWED BOOKS (MEMBER VIEW) */}
+            {activeTab === 'mybooks' && (
+              <div className="space-y-6">
+                
+                {/* Member Profile Overview Header */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-700 text-white font-extrabold text-xl flex items-center justify-center shadow-lg shadow-brand-500/20">
+                      GG
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-slate-900">Gazal Gupta</h2>
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-full">
+                          Active Student
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Roll No: <span className="font-mono font-semibold text-slate-700">2401090100037</span> • Computer Science & Engg • 2nd Year
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quota & Fine Summary Cards */}
+                  <div className="flex gap-4 w-full md:w-auto">
+                    <div className="flex-1 md:flex-initial bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-center">
+                      <div className="text-xs text-slate-500">Currently Borrowed</div>
+                      <div className="text-lg font-extrabold text-slate-800">
+                        {liveBorrows.filter(b => b.memberId === currentMemberId && !b.returnDate).length} / 3
+                      </div>
+                    </div>
+
+                    <div className="flex-1 md:flex-initial bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-center">
+                      <div className="text-xs text-slate-500">Pending Fines</div>
+                      <div className="text-lg font-extrabold text-rose-600">
+                        ₹{liveBorrows.filter(b => b.memberId === currentMemberId && !b.returnDate).reduce((acc, b) => acc + (b.currentFine || 0), 0)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active Borrowed Books List */}
+                <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                      <span>📖 Books In Your Possession</span>
+                      <span className="px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 text-xs font-bold">
+                        {liveBorrows.filter(b => b.memberId === currentMemberId && !b.returnDate).length}
+                      </span>
+                    </h3>
+                    <span className="text-xs text-slate-400">Library return policy: 14 days loan period (₹5/day late fee)</span>
+                  </div>
+
+                  {liveBorrows.filter(b => b.memberId === currentMemberId && !b.returnDate).length === 0 ? (
+                    <div className="text-center py-12 text-slate-500">
+                      <span className="text-3xl block mb-2">🎉</span>
+                      <p className="font-semibold text-slate-700">You currently have no borrowed books.</p>
+                      <button
+                        onClick={() => setActiveTab('catalog')}
+                        className="mt-3 px-4 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl"
+                      >
+                        Browse Book Catalog
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {liveBorrows.filter(b => b.memberId === currentMemberId && !b.returnDate).map(item => {
+                        const targetBook = books.find(bk => bk.id === item.bookId);
+                        const isOverdue = item.status === 'Overdue';
+
+                        return (
+                          <div
+                            key={item.id}
+                            className={`p-5 rounded-2xl border transition-all ${
+                              isOverdue
+                                ? 'bg-rose-50/50 border-rose-200'
+                                : 'bg-slate-50/50 border-slate-200'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start">
+                              <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
+                                {item.id}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                                isOverdue ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                              }`}>
+                                {item.status}
+                              </span>
+                            </div>
+
+                            <h4 className="font-bold text-slate-800 text-base mt-2 line-clamp-1">
+                              {item.bookTitle}
+                            </h4>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {targetBook?.shelfLocation || 'Main Stack'}
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-2 mt-4 text-xs bg-white p-3 rounded-xl border border-slate-100">
+                              <div>
+                                <span className="text-slate-400 block text-[10px] uppercase">Issued Date</span>
+                                <span className="font-semibold text-slate-700">{item.issueDate}</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block text-[10px] uppercase">Due Date</span>
+                                <span className={`font-semibold ${isOverdue ? 'text-rose-600 font-bold' : 'text-slate-700'}`}>
+                                  {item.dueDate}
+                                </span>
+                              </div>
+                            </div>
+
+                            {item.currentFine > 0 && (
+                              <div className="mt-3 p-2 rounded-xl bg-rose-100 text-rose-800 text-xs font-bold flex justify-between items-center">
+                                <span>⚠️ Overdue by {item.overdueDays} days</span>
+                                <span>Late Fine: ₹{item.currentFine}</span>
+                              </div>
+                            )}
+
+                            <div className="mt-4 flex gap-2">
+                              <button
+                                onClick={() => handleReturnBook(item.id)}
+                                className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition"
+                              >
+                                Return Book
+                              </button>
+                              <button
+                                onClick={() => handleRenewBook(item.id)}
+                                className="py-2 px-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition"
+                                title="Extend loan period by 7 days"
+                              >
+                                🔄 Renew (+7d)
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Borrowing History */}
+                <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+                  <h3 className="text-base font-bold text-slate-800 mb-4">
+                    📜 Your Borrowing History & Returned Books
+                  </h3>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-slate-400 uppercase font-mono border-y border-slate-100">
+                        <tr>
+                          <th className="py-3 px-4">Txn ID</th>
+                          <th className="py-3 px-4">Book Title</th>
+                          <th className="py-3 px-4">Issued On</th>
+                          <th className="py-3 px-4">Due Date</th>
+                          <th className="py-3 px-4">Returned On</th>
+                          <th className="py-3 px-4">Fine Settled</th>
+                          <th className="py-3 px-4">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-600">
+                        {liveBorrows.filter(b => b.memberId === currentMemberId && b.returnDate).map(b => (
+                          <tr key={b.id} className="hover:bg-slate-50/50">
+                            <td className="py-3 px-4 font-mono font-medium text-slate-500">{b.id}</td>
+                            <td className="py-3 px-4 font-bold text-slate-800">{b.bookTitle}</td>
+                            <td className="py-3 px-4">{b.issueDate}</td>
+                            <td className="py-3 px-4">{b.dueDate}</td>
+                            <td className="py-3 px-4 text-emerald-700 font-medium">{b.returnDate}</td>
+                            <td className="py-3 px-4 font-mono font-bold text-slate-700">₹{b.finePaid || 0}</td>
+                            <td className="py-3 px-4">
+                              <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold text-[11px]">
+                                Returned
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: TRANSACTIONS & ISSUE/RETURN (ADMIN VIEW) */}
+            {activeTab === 'transactions' && persona === 'admin' && (
+              <div className="space-y-6">
+                
+                {/* Header Action Bar */}
+                <div className="flex flex-wrap justify-between items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">Issue & Return Management</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">Manage active library circulations, calculate overdue charges, and process returns.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setPreselectedBookForIssue(null);
+                      setShowIssueModal(true);
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-md shadow-brand-500/20 transition flex items-center gap-2"
+                  >
+                    <span>⚡ Issue Book to Member</span>
+                  </button>
+                </div>
+
+                {/* Circulation Records Table */}
+                <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold text-slate-800 text-sm">Active & Recent Circulation Records</h3>
+                    <div className="text-xs text-slate-400">Total: {liveBorrows.length} transactions</div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-slate-400 uppercase font-mono border-y border-slate-100">
+                        <tr>
+                          <th className="py-3 px-4">Txn ID</th>
+                          <th className="py-3 px-4">Book Title</th>
+                          <th className="py-3 px-4">Member Name</th>
+                          <th className="py-3 px-4">Roll No</th>
+                          <th className="py-3 px-4">Issue Date</th>
+                          <th className="py-3 px-4">Due Date</th>
+                          <th className="py-3 px-4">Fine / Late Fee</th>
+                          <th className="py-3 px-4">Status</th>
+                          <th className="py-3 px-4 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-600">
+                        {liveBorrows.map(item => {
+                          const isReturned = !!item.returnDate;
+                          const isOverdue = item.status === 'Overdue' && !isReturned;
+
+                          return (
+                            <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                              <td className="py-3 px-4 font-mono font-medium text-slate-500">{item.id}</td>
+                              <td className="py-3 px-4 font-bold text-slate-800 max-w-xs truncate">{item.bookTitle}</td>
+                              <td className="py-3 px-4 font-medium text-slate-700">{item.memberName}</td>
+                              <td className="py-3 px-4 font-mono text-slate-500">{item.memberRoll}</td>
+                              <td className="py-3 px-4">{item.issueDate}</td>
+                              <td className="py-3 px-4 font-medium">
+                                <span className={isOverdue ? 'text-rose-600 font-bold' : ''}>
+                                  {item.dueDate}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 font-mono">
+                                {item.currentFine > 0 ? (
+                                  <span className="font-bold text-rose-600">₹{item.currentFine}</span>
+                                ) : (
+                                  <span className="text-slate-400">₹0</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                  item.status === 'Overdue' ? 'bg-rose-100 text-rose-700' :
+                                  item.status === 'Due Soon' ? 'bg-amber-100 text-amber-800' :
+                                  item.status === 'Returned' ? 'bg-slate-100 text-slate-600' :
+                                  'bg-emerald-100 text-emerald-800'
+                                }`}>
+                                  {item.status}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                {!isReturned ? (
+                                  <button
+                                    onClick={() => handleReturnBook(item.id)}
+                                    className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-sm transition"
+                                  >
+                                    Accept Return
+                                  </button>
+                                ) : (
+                                  <span className="text-slate-400 text-xs">Returned on {item.returnDate}</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: MEMBERS MANAGEMENT (ADMIN VIEW) */}
+            {activeTab === 'members' && persona === 'admin' && (
+              <div className="space-y-6">
+                
+                <div className="flex flex-wrap justify-between items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">Registered Library Members</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">Students, research scholars, and faculty enrolled in the library system.</p>
+                  </div>
+                  <button
+                    onClick={() => setShowAddMemberModal(true)}
+                    className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-md shadow-brand-500/20 transition flex items-center gap-2"
+                  >
+                    <span>+ Register New Member</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {members.map(member => {
+                    const activeBorrowsCount = liveBorrows.filter(b => b.memberId === member.id && !b.returnDate).length;
+                    return (
+                      <div key={member.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-brand-50 text-brand-700 font-bold flex items-center justify-center text-sm border border-brand-100">
+                              {member.avatar || 'MB'}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-slate-900 text-base">{member.name}</h3>
+                              <span className="font-mono text-xs text-slate-400">{member.rollNo}</span>
+                            </div>
+                          </div>
+                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-bold">
+                            {member.status}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1.5 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Department:</span>
+                            <span className="font-semibold text-slate-800">{member.department}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Designation / Year:</span>
+                            <span>{member.year}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">Email:</span>
+                            <span className="text-brand-600">{member.email}</span>
+                          </div>
+                        </div>
+
+                        {/* Borrowing status bar */}
+                        <div>
+                          <div className="flex justify-between text-xs mb-1 font-medium">
+                            <span className="text-slate-500">Books Borrowed:</span>
+                            <span className="text-slate-800 font-bold">{activeBorrowsCount} of {member.maxBooksAllowed} max</span>
+                          </div>
+                          <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                activeBorrowsCount >= member.maxBooksAllowed ? 'bg-rose-500' : 'bg-brand-600'
+                              }`}
+                              style={{ width: `${(activeBorrowsCount / member.maxBooksAllowed) * 100}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: REPORTS & ANALYTICS (ADMIN VIEW) */}
+            {activeTab === 'analytics' && persona === 'admin' && (
+              <div className="space-y-6">
+                
+                {/* Header with Export */}
+                <div className="flex flex-wrap justify-between items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">Library Performance & Analytics</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">Comprehensive statistical report for department audit and HOD review.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleExportCSV}
+                      className="px-4 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition"
+                    >
+                      📥 Download Catalog CSV
+                    </button>
+                    <button
+                      onClick={() => window.print()}
+                      className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition"
+                    >
+                      🖨️ Print Report
+                    </button>
+                  </div>
+                </div>
+
+                {/* Key Metrics Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">Book Titles</span>
+                    <div className="text-2xl font-black text-slate-900 mt-1">{stats.totalTitles}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Distinct Titles</div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">Total Inventory</span>
+                    <div className="text-2xl font-black text-indigo-600 mt-1">{stats.totalCopies}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Physical Volumes</div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">Available On Shelf</span>
+                    <div className="text-2xl font-black text-emerald-600 mt-1">{stats.availableCopies}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Ready for Issue</div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">Active Borrows</span>
+                    <div className="text-2xl font-black text-amber-600 mt-1">{stats.activeBorrows}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Currently Circulating</div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">Overdue Alerts</span>
+                    <div className="text-2xl font-black text-rose-600 mt-1">{stats.overdueBorrows}</div>
+                    <div className="text-[11px] text-rose-500 font-semibold mt-0.5">Action Needed</div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span className="text-slate-400 text-xs font-medium uppercase tracking-wider">Fines Collected</span>
+                    <div className="text-2xl font-black text-slate-800 mt-1">₹{stats.totalFinesCollected}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">+₹{stats.pendingFines} pending</div>
+                  </div>
+                </div>
+
+                {/* Analytical Charts and Tables */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  
+                  {/* Category Distribution Breakdown */}
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                    <h3 className="font-bold text-slate-800 text-sm mb-4">Department / Category Book Distribution</h3>
+                    <div className="space-y-3">
+                      {Object.entries(stats.categoryCounts).map(([cat, count]) => {
+                        const pct = Math.round((count / stats.totalCopies) * 100);
+                        return (
+                          <div key={cat}>
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="font-medium text-slate-700">{cat}</span>
+                              <span className="font-mono text-slate-500">{count} copies ({pct}%)</span>
+                            </div>
+                            <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                              <div
+                                className="bg-brand-600 h-full rounded-full transition-all"
+                                style={{ width: `${pct}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Most Popular Circulated Titles */}
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                    <h3 className="font-bold text-slate-800 text-sm mb-4">Leaderboard: Most Frequently Borrowed Books</h3>
+                    <div className="space-y-3">
+                      {books.slice(0, 5).map((book, idx) => {
+                        const count = stats.borrowCounts[book.id] || 1;
+                        return (
+                          <div key={book.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <div className="flex items-center gap-3">
+                              <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center font-mono">
+                                {idx + 1}
+                              </span>
+                              <div>
+                                <h4 className="font-bold text-slate-800 text-xs line-clamp-1">{book.title}</h4>
+                                <span className="text-[10px] text-slate-400">{book.author}</span>
+                              </div>
+                            </div>
+                            <span className="px-2 py-1 bg-brand-50 text-brand-700 font-bold rounded-lg text-xs font-mono">
+                              {count} borrows
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* FOOTER */}
+          <footer className="bg-white border-t border-slate-200 mt-12 py-6 px-4 text-center text-xs text-slate-500">
+            <div className="max-w-7xl mx-auto space-y-1">
+              <p className="font-bold text-slate-700">
+                Aligarh College of Engineering and Technology • Department of Computer Science & Engineering
+              </p>
+              <p>
+                Mini Project: <strong>Library Management System</strong> • Created by <strong>Gazal Gupta</strong> (Roll: 2401090100037)
+              </p>
+              <p className="text-slate-400">
+                Submitted to <strong>Dr. Anand sir (HOD)</strong> • Built with React, Tailwind CSS, & JavaScript
+              </p>
+            </div>
+          </footer>
+
+          {/* MODAL 1: BOOK DETAIL MODAL */}
+          {selectedBookModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+              <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200">
+                
+                {/* Modal Header */}
+                <div className={`p-6 bg-gradient-to-tr ${selectedBookModal.coverGradient || 'from-blue-600 to-indigo-800'} text-white relative`}>
+                  <button
+                    onClick={() => setSelectedBookModal(null)}
+                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/20 text-white flex items-center justify-center hover:bg-black/40 transition"
+                  >
+                    ✕
+                  </button>
+                  <span className="px-2 py-0.5 rounded bg-white/20 text-xs font-mono font-semibold">
+                    {selectedBookModal.id}
+                  </span>
+                  <h3 className="text-xl font-extrabold mt-2 leading-tight">
+                    {selectedBookModal.title}
+                  </h3>
+                  <p className="text-xs text-white/80 mt-1">
+                    By {selectedBookModal.author}
+                  </p>
+                </div>
+
+                {/* Modal Content */}
+                <div className="p-6 space-y-4">
+                  <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div>
+                      <span className="text-slate-400 block uppercase text-[10px]">Category</span>
+                      <span className="font-bold text-slate-700">{selectedBookModal.category}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block uppercase text-[10px]">Shelf Location</span>
+                      <span className="font-bold text-brand-700">{selectedBookModal.shelfLocation}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block uppercase text-[10px]">ISBN</span>
+                      <span className="font-mono text-slate-700">{selectedBookModal.isbn}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block uppercase text-[10px]">Publisher / Edition</span>
+                      <span className="text-slate-700">{selectedBookModal.publisher} ({selectedBookModal.edition})</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Book Synopsis</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl">
+                      {selectedBookModal.description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-100 text-xs">
+                    <span className="font-semibold text-slate-700">Stock Availability:</span>
+                    <span className="font-bold text-emerald-700">
+                      {selectedBookModal.availableCopies} available of {selectedBookModal.totalCopies} total
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-2">
+                    {persona === 'member' ? (
+                      <button
+                        onClick={() => {
+                          handleIssueBook({ bookId: selectedBookModal.id, memberId: currentMemberId });
+                          setSelectedBookModal(null);
+                        }}
+                        disabled={selectedBookModal.availableCopies <= 0}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-semibold text-white shadow-md transition ${
+                          selectedBookModal.availableCopies <= 0
+                            ? 'bg-slate-300 cursor-not-allowed'
+                            : 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/20'
+                        }`}
+                      >
+                        {selectedBookModal.availableCopies <= 0 ? 'Currently Unavailable' : 'Borrow Book Now'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setPreselectedBookForIssue(selectedBookModal);
+                          setSelectedBookModal(null);
+                          setShowIssueModal(true);
+                        }}
+                        disabled={selectedBookModal.availableCopies <= 0}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-semibold text-white shadow-md transition ${
+                          selectedBookModal.availableCopies <= 0
+                            ? 'bg-slate-300 cursor-not-allowed'
+                            : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
+                        }`}
+                      >
+                        Issue Book to Member
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setSelectedBookModal(null)}
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL 2: ADD / EDIT BOOK (ADMIN) */}
+          {showAddEditBookModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+                <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-bold">
+                      {editingBook ? `Edit "${editingBook.title}"` : 'Add New Book to Library'}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Enter textbook details for catalog indexing</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAddEditBookModal(false);
+                      setEditingBook(null);
+                    }}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const bookData = {
+                      title: formData.get('title'),
+                      author: formData.get('author'),
+                      category: formData.get('category'),
+                      isbn: formData.get('isbn'),
+                      totalCopies: Number(formData.get('totalCopies')),
+                      availableCopies: editingBook ? editingBook.availableCopies : Number(formData.get('totalCopies')),
+                      shelfLocation: formData.get('shelfLocation'),
+                      publisher: formData.get('publisher'),
+                      edition: formData.get('edition'),
+                      publishYear: Number(formData.get('publishYear')),
+                      description: formData.get('description'),
+                      tags: formData.get('tags').split(',').map(t => t.trim())
+                    };
+                    handleSaveBook(bookData);
+                  }}
+                  className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 text-xs"
+                >
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Book Title *</label>
+                    <input
+                      name="title"
+                      defaultValue={editingBook?.title || ''}
+                      required
+                      placeholder="e.g. Database System Concepts"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Author(s) *</label>
+                      <input
+                        name="author"
+                        defaultValue={editingBook?.author || ''}
+                        required
+                        placeholder="e.g. Silberschatz, Korth"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Category *</label>
+                      <select
+                        name="category"
+                        defaultValue={editingBook?.category || 'Computer Science'}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      >
+                        {CATEGORIES.filter(c => c !== 'All Categories').map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">ISBN Number *</label>
+                      <input
+                        name="isbn"
+                        defaultValue={editingBook?.isbn || ''}
+                        required
+                        placeholder="e.g. 978-0073523323"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Total Copies *</label>
+                      <input
+                        type="number"
+                        min="1"
+                        name="totalCopies"
+                        defaultValue={editingBook?.totalCopies || 5}
+                        required
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Shelf / Rack Location *</label>
+                      <input
+                        name="shelfLocation"
+                        defaultValue={editingBook?.shelfLocation || ''}
+                        required
+                        placeholder="e.g. Rack CS-105 (Floor 1)"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Publisher & Edition</label>
+                      <input
+                        name="publisher"
+                        defaultValue={editingBook?.publisher || ''}
+                        placeholder="e.g. McGraw-Hill"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Edition</label>
+                      <input
+                        name="edition"
+                        defaultValue={editingBook?.edition || '1st Edition'}
+                        placeholder="e.g. 6th Edition"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Publish Year</label>
+                      <input
+                        type="number"
+                        name="publishYear"
+                        defaultValue={editingBook?.publishYear || 2022}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Synopsis / Description</label>
+                    <textarea
+                      name="description"
+                      rows="2"
+                      defaultValue={editingBook?.description || ''}
+                      placeholder="Brief summary of textbook topics..."
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                    ></textarea>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Tags (comma separated)</label>
+                    <input
+                      name="tags"
+                      defaultValue={editingBook?.tags?.join(', ') || ''}
+                      placeholder="e.g. Algorithms, Data Structures, CS"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+
+                  <div className="pt-3 flex gap-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold transition"
+                    >
+                      {editingBook ? 'Save Changes' : 'Add to Catalog'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddEditBookModal(false);
+                        setEditingBook(null);
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL 3: ISSUE BOOK MODAL (ADMIN) */}
+          {showIssueModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
+                <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-bold">Issue Book to Member</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Circulation desk checkout processing</p>
+                  </div>
+                  <button onClick={() => setShowIssueModal(false)} className="text-slate-400 hover:text-white">✕</button>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    handleIssueBook({
+                      bookId: formData.get('bookId'),
+                      memberId: formData.get('memberId'),
+                      loanDays: formData.get('loanDays')
+                    });
+                  }}
+                  className="p-6 space-y-4 text-xs"
+                >
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Select Book *</label>
+                    <select
+                      name="bookId"
+                      defaultValue={preselectedBookForIssue?.id || books[0]?.id}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-medium"
+                    >
+                      {books.map(b => (
+                        <option key={b.id} value={b.id} disabled={b.availableCopies <= 0}>
+                          {b.title} ({b.availableCopies} available)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Select Member (Student / Faculty) *</label>
+                    <select
+                      name="memberId"
+                      defaultValue={members[0]?.id}
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-medium"
+                    >
+                      {members.map(m => (
+                        <option key={m.id} value={m.id}>
+                          {m.name} ({m.rollNo}) - {m.department}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Loan Duration</label>
+                    <select
+                      name="loanDays"
+                      defaultValue="14"
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-medium"
+                    >
+                      <option value="7">7 Days (Short Loan)</option>
+                      <option value="14">14 Days (Standard Student Loan)</option>
+                      <option value="21">21 Days (Extended Loan)</option>
+                      <option value="30">30 Days (Faculty Semester Loan)</option>
+                    </select>
+                  </div>
+
+                  <div className="pt-2 flex gap-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition"
+                    >
+                      Confirm Checkout
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowIssueModal(false)}
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL 4: RETURN RECEIPT & CONFIRMATION */}
+          {returnReceiptModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 p-6 space-y-4">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold mb-2">
+                    ✓
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-lg">Book Returned Successfully</h3>
+                  <p className="text-xs text-slate-500">ACET Central Library Return Receipt</p>
+                </div>
+
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 text-xs font-mono">
+                  <div className="flex justify-between border-b border-slate-200/60 pb-1.5">
+                    <span className="text-slate-400">Transaction ID:</span>
+                    <span className="font-bold text-slate-800">{returnReceiptModal.id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Book Title:</span>
+                    <span className="font-bold text-slate-800 text-right truncate max-w-[200px]">{returnReceiptModal.bookTitle}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Borrower:</span>
+                    <span className="text-slate-800">{returnReceiptModal.memberName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Roll No:</span>
+                    <span className="text-slate-800">{returnReceiptModal.memberRoll}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Returned On:</span>
+                    <span className="text-slate-800">{returnReceiptModal.returnDate}</span>
+                  </div>
+                  <div className="flex justify-between pt-1 border-t border-slate-200">
+                    <span className="font-bold text-slate-600">Late Fee / Fine Paid:</span>
+                    <span className={`font-bold ${returnReceiptModal.finePaid > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                      ₹{returnReceiptModal.finePaid}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => window.print()}
+                    className="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition"
+                  >
+                    🖨️ Print Slip
+                  </button>
+                  <button
+                    onClick={() => setReturnReceiptModal(null)}
+                    className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL 5: REGISTER NEW MEMBER (ADMIN) */}
+          {showAddMemberModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
+                <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-bold">Register New Library Member</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Add student or faculty account</p>
+                  </div>
+                  <button onClick={() => setShowAddMemberModal(false)} className="text-slate-400 hover:text-white">✕</button>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    handleAddMember({
+                      name: formData.get('name'),
+                      rollNo: formData.get('rollNo'),
+                      department: formData.get('department'),
+                      year: formData.get('year'),
+                      email: formData.get('email'),
+                      phone: formData.get('phone'),
+                      role: formData.get('role'),
+                      maxBooksAllowed: Number(formData.get('maxBooksAllowed'))
+                    });
+                  }}
+                  className="p-6 space-y-3.5 text-xs"
+                >
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Full Name *</label>
+                    <input
+                      name="name"
+                      required
+                      placeholder="e.g. Gazal Gupta"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Roll / Staff ID *</label>
+                      <input
+                        name="rollNo"
+                        required
+                        placeholder="e.g. 2401090100037"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Department *</label>
+                      <input
+                        name="department"
+                        required
+                        placeholder="e.g. Computer Science"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Year / Position</label>
+                      <input
+                        name="year"
+                        defaultValue="2nd Year"
+                        placeholder="e.g. 2nd Year"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Role</label>
+                      <select
+                        name="role"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      >
+                        <option value="Student">Student</option>
+                        <option value="Faculty">Faculty</option>
+                        <option value="Research Scholar">Research Scholar</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Email Address *</label>
+                      <input
+                        name="email"
+                        type="email"
+                        required
+                        placeholder="e.g. gazal@acet.ac.in"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Max Borrow Limit</label>
+                      <input
+                        type="number"
+                        name="maxBooksAllowed"
+                        defaultValue="3"
+                        min="1"
+                        max="10"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex gap-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold transition"
+                    >
+                      Save & Register
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddMemberModal(false)}
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    // Render application
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
